@@ -153,8 +153,8 @@ def test_init(
     mp.assert_called_once_with(default_model, parameters_two, global_settings)
     assert my_grid_iterator.grid_dict == grid_dict_two
     assert my_grid_iterator.result_description == result_description
-    assert my_grid_iterator.samples is None
-    assert my_grid_iterator.output is None
+    assert my_grid_iterator.inputs is None
+    assert my_grid_iterator.outputs is None
     assert not my_grid_iterator.num_grid_points_per_axis
     assert my_grid_iterator.num_parameters == num_parameters
     assert not my_grid_iterator.scale_type
@@ -184,7 +184,7 @@ def test_pre_run_one(
         grid_design=grid_dict_one,
     )
     grid_iterator.pre_run()
-    np.testing.assert_array_equal(grid_iterator.samples, expected_samples_one)
+    np.testing.assert_array_equal(grid_iterator.inputs, expected_samples_one)
 
 
 def test_pre_run_two(
@@ -203,7 +203,7 @@ def test_pre_run_two(
         grid_design=grid_dict_two,
     )
     grid_iterator.pre_run()
-    np.testing.assert_array_equal(grid_iterator.samples, expected_samples_two)
+    np.testing.assert_array_equal(grid_iterator.inputs, expected_samples_two)
 
 
 def test_pre_run_three(
@@ -223,7 +223,7 @@ def test_pre_run_three(
         grid_design=grid_dict_three,
     )
     grid_iterator.pre_run()
-    np.testing.assert_array_equal(grid_iterator.samples, expected_samples_three)
+    np.testing.assert_array_equal(grid_iterator.inputs, expected_samples_three)
 
 
 def test_core_run(mocker, default_grid_iterator, expected_samples_two):

@@ -175,7 +175,7 @@ class TestDaskCluster:
 
         # assert statements
         np.testing.assert_array_almost_equal(
-            results["raw_output_data"]["result"], fourc_example_expected_output, decimal=6
+            results["result"], fourc_example_expected_output, decimal=6
         )
 
     def delete_simulation_data(self, remote_connection):

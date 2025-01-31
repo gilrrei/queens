@@ -149,7 +149,7 @@ class ElementaryEffectsIterator(Iterator):
 
     def post_run(self):
         """Analyze the results."""
-        results = self.process_results()
+        results = self.get_results()
         if self.result_description is not None:
             self.print_results(results)
 
@@ -159,7 +159,7 @@ class ElementaryEffectsIterator(Iterator):
             if qvis.sa_visualization_instance:
                 qvis.sa_visualization_instance.plot(results)
 
-    def process_results(self):
+    def get_results(self):
         """Write all results to self contained dictionary."""
         results = {"parameter_names": self.parameters.names, "sensitivity_indices": self.si}
         return results

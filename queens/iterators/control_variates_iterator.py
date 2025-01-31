@@ -241,8 +241,12 @@ class ControlVariatesIterator(Iterator):
         if self.use_optimal_num_samples:
             self.output["sample_ratio"] = sample_ratio
 
+    def get_results(self):
+        return self.output
+
     def post_run(self):
         """Write results to result file."""
         write_results(
-            processed_results=self.output, file_path=self.global_settings.result_file(".pickle")
+            processed_results=self.get_results(),
+            file_path=self.global_settings.result_file(".pickle"),
         )

@@ -23,9 +23,12 @@ def test_queens_readme_example(tmp_path):
     # Get the source of the example
     example_source = get_queens_example_from_readme(tmp_path)
 
+    source_path = tmp_path / "example.py"
+    source_path.write_text(example_source)
+
     # Run the script
     process_returncode, _, _, _ = run_subprocess(
-        f"python -c '{example_source}'", raise_error_on_subprocess_failure=False
+        f"python {source_path}", raise_error_on_subprocess_failure=False
     )
 
     # Check for an exit code

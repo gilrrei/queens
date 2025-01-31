@@ -16,15 +16,14 @@
 
 import logging
 
-from queens.iterators.iterator import Iterator
+from queens.iterators.sequence_iterator import SequenceIterator
 from queens.utils.logger_settings import log_init_args
-from queens.utils.process_outputs import process_outputs, write_results
 from queens.utils.sobol_sequence import sample_sobol_sequence
 
 _logger = logging.getLogger(__name__)
 
 
-class SobolSequenceIterator(Iterator):
+class SobolSequenceIterator(SequenceIterator):
     """Sobol sequence in multiple dimensions.
 
     Attributes:
@@ -33,9 +32,6 @@ class SobolSequenceIterator(Iterator):
         number_of_samples (int): Number of samples to compute.
         randomize (bool): Setting this to *True* will produce scrambled Sobol sequences. Scrambling
                           is capable of producing better Sobol sequences.
-        result_description (dict):  Description of desired results.
-        samples (np.array):   Array with all samples.
-        output (np.array):   Array with all model outputs.
     """
 
     @log_init_args
@@ -63,36 +59,16 @@ class SobolSequenceIterator(Iterator):
             randomize (bool): Setting this to True will produce scrambled Sobol sequences.
                               Scrambling is capable of producing better Sobol sequences.
         """
-        super().__init__(model, parameters, global_settings)
-
-        self.seed = seed
+        super().__init__(model, parameters, global_settings, result_description, seed)
         self.number_of_samples = number_of_samples
         self.randomize = randomize
-        self.result_description = result_description
-        self.samples = None
-        self.output = None
 
-    def pre_run(self):
+    def generate_inputs(self):
         """Generate samples for subsequent Sobol sequence analysis."""
-        _logger.info("Number of inputs: %s", self.parameters.num_parameters)
-        _logger.info("Number of samples: %s", self.number_of_samples)
-        _logger.info("Randomize: %s", self.randomize)
-
-        self.samples = sample_sobol_sequence(
+        return sample_sobol_sequence(
             dimension=self.parameters.num_parameters,
             number_of_samples=self.number_of_samples,
             parameters=self.parameters,
             randomize=self.randomize,
             seed=self.seed,
         )
-
-    def core_run(self):
-        """Run Sobol sequence analysis on model."""
-        self.output = self.model.evaluate(self.samples)
-
-    def post_run(self):
-        """Analyze the results."""
-        if self.result_description is not None:
-            results = process_outputs(self.output, self.result_description, input_data=self.samples)
-            if self.result_description["write_results"]:
-                write_results(results, self.global_settings.result_file(".pickle"))

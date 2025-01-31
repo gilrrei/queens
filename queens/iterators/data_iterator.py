@@ -19,7 +19,8 @@ import pickle
 
 from queens.iterators.iterator import Iterator
 from queens.utils.logger_settings import log_init_args
-from queens.utils.process_outputs import process_outputs, write_results
+from queens.utils.process_outputs import write_results
+from queens.utils.sampler import get_samples_statistics
 
 _logger = logging.getLogger(__name__)
 
@@ -67,12 +68,16 @@ class DataIterator(Iterator):
         except ValueError:
             self.samples, self.output = self.read_pickle_file()
 
+    def get_results(self):
+        results = get_samples_statistics(self.output["result"])
+        results["outputs"] = self.output
+        return results
+
     def post_run(self):
         """Analyze the results."""
         if self.result_description is not None:
-            results = process_outputs(self.output, self.result_description)
             if self.result_description["write_results"]:
-                write_results(results, self.global_settings.result_file(".pickle"))
+                write_results(self.get_results(), self.global_settings.result_file(".pickle"))
         # else:
         _logger.info("Size of inputs %s", self.samples.shape)
         _logger.info("Inputs %s", self.samples)

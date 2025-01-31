@@ -62,10 +62,10 @@ def test_gaussian_smc(
     )
     iterator = SequentialMonteCarloIterator(
         seed=42,
-        num_particles=10,
+        num_particles=1000,
         temper_type="bayes",
         plot_trace_every=0,
-        num_rejuvenation_steps=3,
+        num_rejuvenation_steps=20,
         result_description={"write_results": True, "plot_results": True, "cov": False},
         mcmc_proposal_distribution=mcmc_proposal_distribution,
         model=model,
@@ -90,5 +90,5 @@ def test_gaussian_smc(
     # posterior var: [0.5]
     # posterior std: [0.70710678]
     # however, we only have a very inaccurate approximation here:
-    np.testing.assert_almost_equal(results["mean"], np.array([[0.93548976]]), decimal=7)
-    np.testing.assert_almost_equal(results["var"], np.array([[0.72168334]]), decimal=7)
+    np.testing.assert_almost_equal(results["mean"], np.array([0.9934865576387504]), decimal=7)
+    np.testing.assert_almost_equal(results["variance"], np.array([0.4433163375254316]), decimal=7)

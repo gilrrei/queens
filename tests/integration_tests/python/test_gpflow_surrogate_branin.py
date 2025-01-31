@@ -69,13 +69,7 @@ def test_gpflow_surrogate_branin(
     iterator = MonteCarloIterator(
         seed=44,
         num_samples=10,
-        result_description={
-            "write_results": True,
-            "plot_results": False,
-            "bayesian": False,
-            "num_support_points": 10,
-            "estimate_all": False,
-        },
+        result_description={"write_results": True},
         model=model,
         parameters=parameters,
         global_settings=global_settings,
@@ -87,14 +81,12 @@ def test_gpflow_surrogate_branin(
     # Load results
     results = load_result(global_settings.result_file(".pickle"))
 
+    np.testing.assert_array_almost_equal(results["outputs"]["result"], expected_mean, decimal=3)
     np.testing.assert_array_almost_equal(
-        results["raw_output_data"]["result"], expected_mean, decimal=3
+        results["outputs"]["variance"], expected_variance, decimal=2
     )
     np.testing.assert_array_almost_equal(
-        results["raw_output_data"]["variance"], expected_variance, decimal=2
-    )
-    np.testing.assert_array_almost_equal(
-        results["raw_output_data"]["post_samples"], expected_posterior_samples, decimal=2
+        results["outputs"]["post_samples"], expected_posterior_samples, decimal=2
     )
 
 

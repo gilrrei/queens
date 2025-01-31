@@ -143,7 +143,7 @@ class SobolIndexIterator(Iterator):
 
     def post_run(self):
         """Analyze the results."""
-        results = self.process_results()
+        results = self.get_results()
         if self.result_description is not None:
             if self.result_description["write_results"]:
                 write_results(results, self.global_settings.result_file(".pickle"))
@@ -213,7 +213,7 @@ class SobolIndexIterator(Iterator):
         _logger.info("Higher order interactions:")
         _logger.info(str_higher_order_interactions)
 
-    def process_results(self):
+    def get_results(self):
         """Write all results to self contained dictionary.
 
         Returns:

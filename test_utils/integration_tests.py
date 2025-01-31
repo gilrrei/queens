@@ -25,12 +25,8 @@ def assert_monte_carlo_iterator_results(results, expected_mean, expected_var):
         expected_mean (np.ndarray): Expected mean of the results
         expected_var (np.ndarray): Expected variance of the results
     """
-    np.testing.assert_array_almost_equal(
-        results["raw_output_data"]["result"], expected_mean, decimal=4
-    )
-    np.testing.assert_array_almost_equal(
-        results["raw_output_data"]["variance"], expected_var, decimal=2
-    )
+    np.testing.assert_array_almost_equal(results["result"], expected_mean, decimal=4)
+    np.testing.assert_array_almost_equal(results["variance"], expected_var, decimal=2)
 
 
 def assert_sobol_index_iterator_results(results, expected_results):

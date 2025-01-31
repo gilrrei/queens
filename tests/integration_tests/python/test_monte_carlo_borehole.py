@@ -62,4 +62,4 @@ def test_monte_carlo_borehole(global_settings):
     results = load_result(global_settings.result_file(".pickle"))
 
     assert results["mean"] == pytest.approx(60.4546131041304)
-    assert results["var"] == pytest.approx(1268.1681250046817)
+    assert results["variance"] == pytest.approx(1268.1681250046817)

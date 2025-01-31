@@ -19,8 +19,7 @@ import re
 from collections import OrderedDict
 
 import numpy as np
-import particles
-from particles import collectors as col
+from particles import SMC, collectors
 from particles import distributions as dists
 from particles.smc_samplers import AdaptiveTempering
 
@@ -29,7 +28,9 @@ from queens.iterators.iterator import Iterator
 from queens.utils import smc_utils
 from queens.utils.logger_settings import log_init_args
 from queens.utils.print_utils import get_str_table
-from queens.utils.process_outputs import process_outputs, write_results
+from queens.utils.process_outputs import write_results
+from queens.utils.sampler import get_samples_statistics
+
 
 _logger = logging.getLogger(__name__)
 
@@ -198,11 +199,11 @@ class SequentialMonteCarloChopinIterator(Iterator):
         feynman_kac_model = self.initialize_feynman_kac(static_model)
 
         # SMC object
-        self.smc_obj = particles.SMC(
+        self.smc_obj = SMC(
             fk=feynman_kac_model,
             N=self.num_particles,
             verbose=False,
-            collect=[col.Moments()],
+            collect=[collectors.Moments()],
             resampling=self.resampling_method,
             qmc=False,  # QMC can not be used in this static setting in particles (currently)
         )
@@ -227,33 +228,25 @@ class SequentialMonteCarloChopinIterator(Iterator):
                 _logger.warning("Stopping SMC...")
                 break
 
+    def get_results(self):
+        particles = self.smc_obj.fk.model.particles_array_to_numpy(self.smc_obj.X.theta)
+        weights = self.smc_obj.W.reshape(-1, 1)
+
+        results = get_samples_statistics(particles, weights, self.result_description)
+        _logger.info(get_str_table("Particles.", results))
+        results["particles"] = particles
+        results["weights"] = weights
+        results["log_posterior"] = self.smc_obj.X.lpost
+        results["n_sims"] = self.n_sims
+
+        return results
+
     def post_run(self):
         """Analyze the resulting importance sample."""
         # SMC data
-        particles_smc = self.smc_obj.fk.model.particles_array_to_numpy(self.smc_obj.X.theta)
-        weights = self.smc_obj.W.reshape(-1, 1)
-
-        # First and second moment
-        mean = self.smc_obj.fk.model.particles_array_to_numpy(
-            self.smc_obj.summaries.moments[-1]["mean"]
-        )[0]
-        variance = self.smc_obj.fk.model.particles_array_to_numpy(
-            self.smc_obj.summaries.moments[-1]["var"]
-        )[0]
         if self.result_description:
-            results = process_outputs(
-                {
-                    "particles": particles_smc,
-                    "weights": weights,
-                    "log_posterior": self.smc_obj.X.lpost,
-                    "mean": mean,
-                    "var": variance,
-                    "n_sims": self.n_sims,
-                },
-                self.result_description,
-            )
             if self.result_description["write_results"]:
-                write_results(results, self.global_settings.result_file(".pickle"))
+                write_results(self.get_results(), self.global_settings.result_file(".pickle"))
             _logger.info("Post run data exported!")
 
 

@@ -82,7 +82,9 @@ def test_gaussian_nuts(
     assert results["mean"].mean(axis=0) == pytest.approx(
         np.array([-0.2868793496608573, 0.6474274597130008])
     )
-    assert results["var"].mean(axis=0) == pytest.approx([0.08396277217936474, 0.10836256575521087])
+    assert results["variance"].mean(axis=0) == pytest.approx(
+        [0.08396277217936474, 0.10836256575521087]
+    )
 
 
 @pytest.fixture(name="_create_experimental_data")

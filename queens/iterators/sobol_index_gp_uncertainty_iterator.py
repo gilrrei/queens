@@ -161,7 +161,7 @@ class SobolIndexGPUncertaintyIterator(Iterator):
         """Post-run."""
         if self.result_description is not None:
             if self.result_description["write_results"]:
-                write_results(self.results, self.global_settings.result_file(".pickle"))
+                write_results(self.get_results(), self.global_settings.result_file(".pickle"))
 
     def calculate_index(self):
         """Calculate Sobol indices.
@@ -227,3 +227,6 @@ class SobolIndexGPUncertaintyIterator(Iterator):
             estimator = SobolIndexEstimator
 
         return sampler, estimator
+
+    def get_results(self):
+        return self.results

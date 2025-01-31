@@ -33,7 +33,9 @@ from queens.distributions.normal import NormalDistribution
 from queens.iterators.iterator import Iterator
 from queens.utils import mcmc_utils, smc_utils
 from queens.utils.logger_settings import log_init_args
-from queens.utils.process_outputs import process_outputs, write_results
+from queens.utils.process_outputs import write_results
+from queens.utils.sampler import get_samples_statistics
+from queens.utils.print_utils import get_str_table
 
 _logger = logging.getLogger(__name__)
 
@@ -286,6 +288,25 @@ class MetropolisHastingsIterator(Iterator):
         for i in tqdm(range(self.num_burn_in + 1, self.num_burn_in + self.num_samples + 1)):
             self.do_mh_step(i)
 
+    def get_results(self):
+        initial_samples = self.chains[0]
+        chain_burn_in = self.chains[1 : self.num_burn_in + 1]
+        chain_core = self.chains[self.num_burn_in + 1 : self.num_samples + self.num_burn_in + 1]
+
+        accept_rate = np.exp(np.log(self.accepted) - np.log(self.num_samples))
+
+        # process output takes a dict as input with key 'result'
+        results = get_samples_statistics(chain_core, covariance=True)
+        _logger.info(get_str_table("Chain.", results))
+        results["result"] = chain_core
+        results["accept_rate"] = accept_rate
+        results["chain_burn_in"] = chain_burn_in
+        results["initial_sample"] = initial_samples
+        results["log_likelihood"] = self.log_likelihood
+        results["log_prior"] = self.log_prior
+        results["log_posterior"] = self.log_posterior
+        return results
+
     def post_run(self):
         """Analyze the resulting chain."""
         avg_accept_rate = np.exp(
@@ -301,33 +322,15 @@ class MetropolisHastingsIterator(Iterator):
                 avg_accept_rate,
             ]
         if self.result_description:
-            initial_samples = self.chains[0]
-            chain_burn_in = self.chains[1 : self.num_burn_in + 1]
-            chain_core = self.chains[self.num_burn_in + 1 : self.num_samples + self.num_burn_in + 1]
-
-            accept_rate = np.exp(np.log(self.accepted) - np.log(self.num_samples))
-
-            # process output takes a dict as input with key 'result'
-            results = process_outputs(
-                {
-                    "result": chain_core,
-                    "accept_rate": accept_rate,
-                    "chain_burn_in": chain_burn_in,
-                    "initial_sample": initial_samples,
-                    "log_likelihood": self.log_likelihood,
-                    "log_prior": self.log_prior,
-                    "log_posterior": self.log_posterior,
-                },
-                self.result_description,
-            )
+            results = self.get_results()
             if self.result_description["write_results"]:
                 write_results(results, self.global_settings.result_file(".pickle"))
 
-            _logger.info("Size of outputs %s", chain_core.shape)
+            _logger.info("Size of outputs %s", results["result"].shape)
             for i in range(self.num_chains):
                 _logger.info("#############################################")
                 _logger.info("Chain %d", i + 1)
-                _logger.info("\tAcceptance rate: %s", accept_rate[i])
+                _logger.info("\tAcceptance rate: %s", results["accept_rate"][i])
                 _logger.info(
                     "\tCovariance of proposal : %s",
                     (self.scale_covariance[i] * self.proposal_distribution.covariance).tolist(),
@@ -335,10 +338,10 @@ class MetropolisHastingsIterator(Iterator):
                 _logger.info(
                     "\tmean±std: %s±%s",
                     results.get("result", np.array([np.nan] * self.num_chains))[i],
-                    np.sqrt(results.get("var", np.array([np.nan] * self.num_chains))[i]),
+                    np.sqrt(results.get("variance", np.array([np.nan] * self.num_chains))[i]),
                 )
                 _logger.info(
-                    "\tvar: %s", results.get("var", np.array([np.nan] * self.num_chains))[i]
+                    "\tvar: %s", results.get("variance", np.array([np.nan] * self.num_chains))[i]
                 )
                 _logger.info(
                     "\tcov: %s",
@@ -347,7 +350,7 @@ class MetropolisHastingsIterator(Iterator):
             _logger.info("#############################################")
 
             data_dict = {
-                variable_name: np.swapaxes(chain_core[:, :, i], 1, 0)
+                variable_name: np.swapaxes(results["result"][:, :, i], 1, 0)
                 for i, variable_name in enumerate(self.parameters.parameters_keys)
             }
             inference_data = az.convert_to_inference_data(data_dict)

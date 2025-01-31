@@ -78,10 +78,10 @@ def test_smc_bayes_temper_multivariate_gaussian_mixture(
     )
     iterator = SequentialMonteCarloIterator(
         seed=42,
-        num_particles=15,
+        num_particles=10000,
         temper_type="bayes",
         plot_trace_every=0,
-        num_rejuvenation_steps=2,
+        num_rejuvenation_steps=10,
         result_description={"write_results": True, "plot_results": False, "cov": True},
         mcmc_proposal_distribution=mcmc_proposal_distribution,
         model=model,
@@ -102,24 +102,36 @@ def test_smc_bayes_temper_multivariate_gaussian_mixture(
     # posterior mean: [-0.4 -0.4 -0.4 -0.4]
     # posterior var: [0.1, 0.1, 0.1, 0.1]
     # however, we only have a very inaccurate approximation here:
+
     np.testing.assert_almost_equal(
-        results["mean"], np.array([[0.23384, 0.21806, 0.24079, 0.24528]]), decimal=5
+        results["mean"],
+        np.array(
+            [-0.4014628684340895, -0.4032205825520207, -0.40400383076171525, -0.40232939287648595]
+        ),
+        decimal=5,
     )
 
     np.testing.assert_almost_equal(
-        results["var"], np.array([[0.30894, 0.15192, 0.19782, 0.18781]]), decimal=5
+        results["variance"],
+        np.array(
+            [0.08320512167177373, 0.08387214564735067, 0.08678508477713553, 0.08246132367376408]
+        ),
+        decimal=5,
     )
 
     np.testing.assert_almost_equal(
-        results["cov"],
+        results["covariance"],
         np.array(
             [
+                [0.0832051216717734, 0.07410165364338744, 0.07468160588840676, 0.07297119199109997],
+                [0.07410165364338744, 0.08387214564735031, 0.07548053239270636, 0.0729220456760149],
                 [
-                    [0.30894, 0.21080, 0.24623, 0.23590],
-                    [0.21080, 0.15192, 0.17009, 0.15951],
-                    [0.24623, 0.17009, 0.19782, 0.18695],
-                    [0.23590, 0.15951, 0.18695, 0.18781],
-                ]
+                    0.07468160588840676,
+                    0.07548053239270636,
+                    0.08678508477713569,
+                    0.07403860731816209,
+                ],
+                [0.07297119199109997, 0.0729220456760149, 0.07403860731816209, 0.082461323673764],
             ]
         ),
         decimal=5,

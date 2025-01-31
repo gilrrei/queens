@@ -63,4 +63,4 @@ def test_latin_hyper_cube_borehole(global_settings):
     results = load_result(global_settings.result_file(".pickle"))
 
     assert results["mean"] == pytest.approx(62.05240444441511)
-    assert results["var"] == pytest.approx(1371.7554224384000)
+    assert results["variance"] == pytest.approx(1371.7554224384000)

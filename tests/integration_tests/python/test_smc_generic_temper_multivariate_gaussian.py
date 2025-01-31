@@ -100,7 +100,7 @@ def test_smc_generic_temper_multivariate_gaussian(
     )
 
     np.testing.assert_almost_equal(
-        results["var"], np.array([[3.255066, 4.143380, 1.838545, 2.834356]]), decimal=5
+        results["variance"], np.array([[3.255066, 4.143380, 1.838545, 2.834356]]), decimal=5
     )
 
     np.testing.assert_almost_equal(

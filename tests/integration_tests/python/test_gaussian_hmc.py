@@ -81,4 +81,4 @@ def test_gaussian_hmc(
     assert results["mean"].mean(axis=0) == pytest.approx(
         np.array([0.19363280864587615, -1.1303341362165935])
     )
-    assert results["var"].mean(axis=0) == pytest.approx([0, 0])
+    assert results["variance"].mean(axis=0) == pytest.approx([0, 0])

@@ -136,7 +136,7 @@ def test_write_random_material_to_dat(
     try:
         # Check if we got the expected results
         np.testing.assert_array_almost_equal(results["mean"], expected_mean, decimal=8)
-        np.testing.assert_array_almost_equal(results["var"], expected_var, decimal=8)
+        np.testing.assert_array_almost_equal(results["variance"], expected_var, decimal=8)
     except (AssertionError, KeyError) as error:
         experiment_dir = experiment_directory(global_settings.experiment_name)
         job_dir = experiment_dir / "0"

@@ -203,6 +203,14 @@ class PolynomialChaosIterator(Iterator):
 
         return polynomial_expansion, collocation_points
 
+    def get_results(self):
+        """Get the results dict.
+
+        Returns:
+            dict: dictionary
+        """
+        return self.result_dict
+
     def post_run(self):
         """Analyze the results."""
         if self.result_description is not None:

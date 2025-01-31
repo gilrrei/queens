@@ -92,7 +92,7 @@ def test_metropolis_hastings_multivariate_gaussian(
         results["mean"], np.array([[0.7240107551260684, -2.045891088599629]])
     )
     np.testing.assert_allclose(
-        results["cov"],
+        results["covariance"],
         np.array(
             [
                 [

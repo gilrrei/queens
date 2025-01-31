@@ -114,7 +114,7 @@ class AdaptiveSamplingIterator(Iterator):
 
         else:
             self.initial_train_iterator.pre_run()
-            self.x_train_new = self.initial_train_iterator.samples
+            self.x_train_new = self.initial_train_iterator.inputs
             self.x_train = np.empty((0, self.parameters.num_parameters))
             self.y_train = np.empty((0, 1))
             self.model_outputs = np.empty((0, self.likelihood_model.normal_distribution.mean.size))
@@ -150,7 +150,7 @@ class AdaptiveSamplingIterator(Iterator):
             particles, weights, log_posterior = self.get_particles_and_weights()
             self.x_train_new = self.choose_new_samples(particles, weights)
 
-            cs_div = self.write_results(particles, weights, log_posterior, i)
+            cs_div = self.write_results_per_iteration(particles, weights, log_posterior, i)
 
             if cs_div < self.cs_div_criterion:
                 break
@@ -185,7 +185,20 @@ class AdaptiveSamplingIterator(Iterator):
         x_train_new = particles[indices]
         return x_train_new
 
-    def write_results(self, particles, weights, log_posterior, iteration):
+    def get_results(self):
+        particles, weights, log_posterior = self.get_particles_and_weights()
+        results = {
+            "x_train": self.x_train,
+            "model_outputs": self.model_outputs,
+            "y_train": self.y_train,
+            "x_train_new": self.x_train_new,
+            "particles": particles,
+            "weights": weights,
+            "log_posterior": log_posterior,
+        }
+        return results
+
+    def write_results_per_iteration(self, particles, weights, log_posterior, iteration):
         """Write results to output file and calculate cs_div.
 
         Args:
@@ -264,8 +277,8 @@ class AdaptiveSamplingIterator(Iterator):
             ].reshape(-1)
             weights = np.ones(log_posterior.size) / log_posterior.size
         elif isinstance(self.solving_iterator, GridIterator):
-            particles = self.solving_iterator.samples
-            log_posterior = self.solving_iterator.output
+            particles = self.solving_iterator.inputs
+            log_posterior = self.solving_iterator.outputs
             log_posterior_ = log_posterior - np.max(log_posterior)
             weights = np.exp(log_posterior_) / np.sum(np.exp(log_posterior_))
         else:

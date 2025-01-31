@@ -503,3 +503,6 @@ class BMFIAIterator(Iterator):
         _logger.info("-------------------------------------------------------------------")
         _logger.info("Successfully calculated the high-fidelity training points!")
         _logger.info("-------------------------------------------------------------------")
+
+    def get_results(self):
+        return None

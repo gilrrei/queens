@@ -62,3 +62,7 @@ class Iterator(metaclass=abc.ABCMeta):
         self.pre_run()
         self.core_run()
         self.post_run()
+
+    @abc.abstractmethod
+    def get_results(self):
+        """Get the results dict."""

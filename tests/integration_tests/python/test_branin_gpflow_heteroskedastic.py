@@ -69,13 +69,7 @@ def test_branin_gpflow_heteroskedastic(expected_mean, expected_var, global_setti
     iterator = MonteCarloIterator(
         seed=44,
         num_samples=10,
-        result_description={
-            "write_results": True,
-            "plot_results": False,
-            "bayesian": False,
-            "num_support_points": 10,
-            "estimate_all": False,
-        },
+        result_description={"write_results": True},
         model=gp_model,
         parameters=parameters,
         global_settings=global_settings,
@@ -87,12 +81,8 @@ def test_branin_gpflow_heteroskedastic(expected_mean, expected_var, global_setti
     # Load results
     results = load_result(global_settings.result_file(".pickle"))
 
-    np.testing.assert_array_almost_equal(
-        results["raw_output_data"]["result"], expected_mean, decimal=2
-    )
-    np.testing.assert_array_almost_equal(
-        results["raw_output_data"]["variance"], expected_var, decimal=2
-    )
+    np.testing.assert_array_almost_equal(results["outputs"]["result"], expected_mean, decimal=2)
+    np.testing.assert_array_almost_equal(results["outputs"]["variance"], expected_var, decimal=2)
 
 
 @pytest.fixture(name="expected_mean")

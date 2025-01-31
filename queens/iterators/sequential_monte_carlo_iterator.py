@@ -48,7 +48,9 @@ from queens.iterators.iterator import Iterator
 from queens.iterators.metropolis_hastings_iterator import MetropolisHastingsIterator
 from queens.utils import smc_utils
 from queens.utils.logger_settings import log_init_args
-from queens.utils.process_outputs import process_outputs, write_results
+from queens.utils.process_outputs import write_results
+from queens.utils.sampler import get_samples_statistics
+from queens.utils.print_utils import get_str_table
 
 _logger = logging.getLogger(__name__)
 
@@ -422,50 +424,33 @@ class SequentialMonteCarloIterator(Iterator):
             if self.plot_trace_every and not step % self.plot_trace_every:
                 self.draw_trace(step)
 
+    def get_results(self):
+        normalized_weights = self.weights / np.sum(self.weights)
+        results = get_samples_statistics(self.particles, normalized_weights, covariance=True)
+        _logger.info(get_str_table("Particles.", results))
+        results["particles"] = self.particles
+        results["weights"] = normalized_weights
+        results["log_likelihood"] = self.log_likelihood
+        results["log_prior"] = self.log_prior
+        results["log_posterior"] = self.log_posterior
+        return results
+
     def post_run(self):
         """Analyze the resulting importance sample."""
-        normalized_weights = self.weights / np.sum(self.weights)
 
-        particles_resampled, _, _, _ = self.resample()
         if self.result_description:
             # TODO # pylint: disable=fixme
             # interpret the resampled particles as a single markov chain -> in accordance with the
             # Metropolis Hastings iterator add a dimension to the numpy array
             # this enables the calculation of the covariance matrix
-            results = process_outputs(
-                {
-                    "result": particles_resampled[:, np.newaxis, :],
-                    "particles": self.particles,
-                    "weights": normalized_weights,
-                    "log_likelihood": self.log_likelihood,
-                    "log_prior": self.log_prior,
-                    "log_posterior": self.log_posterior,
-                },
-                self.result_description,
-            )
+            results = self.get_results()
             if self.result_description["write_results"]:
                 write_results(results, self.global_settings.result_file(".pickle"))
 
             if self.result_description["plot_results"]:
                 self.draw_trace("final")
 
-            mean = np.sum(np.multiply(np.squeeze(normalized_weights), self.particles.T).T, axis=0)
-            var = np.sum(
-                np.multiply(np.squeeze(normalized_weights), np.power(self.particles - mean, 2).T).T,
-                axis=0,
-            )
-            std = np.sqrt(var)
-
-            _logger.info("\tESS: %s", self.ess_cur)
-            _logger.info("\tIS mean±std: %s±%s", mean, std)
-
-            _logger.info(
-                "\tmean±std: %s±%s",
-                results.get("mean", np.nan),
-                np.sqrt(results.get("var", np.nan)),
-            )
-            _logger.info("\tvar: %s", (results.get("var", np.nan)))
-            _logger.info("\tcov: %s", results.get("cov", np.nan))
+            _logger.info("ESS: %s", self.ess_cur)
 
     def draw_trace(self, step):
         """Plot the trace of the current particle approximation.

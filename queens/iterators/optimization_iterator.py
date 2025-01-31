@@ -387,6 +387,14 @@ class OptimizationIterator(Iterator):
         end = time.time()
         _logger.info("Optimization took %E seconds.", end - start)
 
+    def get_results(self):
+        """Get the results dict.
+
+        Returns:
+            dict: dictionary
+        """
+        return self.solution
+
     def post_run(self):
         """Analyze the resulting optimum."""
         _logger.info("The optimum:\n\t%s", self.solution.x)
@@ -397,7 +405,7 @@ class OptimizationIterator(Iterator):
         if self.result_description:
             if self.result_description["write_results"]:
                 write_results(
-                    self.solution,
+                    self.get_results(),
                     self.global_settings.result_file(".pickle"),
                 )
 

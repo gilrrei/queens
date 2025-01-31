@@ -15,19 +15,17 @@
 """Iterator to run a model on predefined input points."""
 
 import logging
-import time
 
 import numpy as np
 
-from queens.iterators.iterator import Iterator
+from queens.iterators.sequence_iterator import SequenceIterator
 from queens.utils.ascii_art import print_points_iterator
 from queens.utils.logger_settings import log_init_args
-from queens.utils.process_outputs import write_results
 
 _logger = logging.getLogger(__name__)
 
 
-class PointsIterator(Iterator):
+class PointsIterator(SequenceIterator):
     """Iterator at given input points.
 
     Attributes:
@@ -49,16 +47,14 @@ class PointsIterator(Iterator):
             points (dict): Dictionary with name and samples
             result_description (dict): Settings for storing
         """
-        super().__init__(model, parameters, global_settings)
+        super().__init__(model, parameters, global_settings, result_description, None)
         self.points = points
         self.result_description = result_description
-        self.output = None
-        self.points_array = None
 
-    def pre_run(self):
+    def generate_inputs(self):
         """Prerun."""
         print_points_iterator()
-        _logger.info("Starting points iterator.")
+        _logger.info("Creating points.")
 
         points = []
         for name in self.parameters.names:
@@ -75,25 +71,4 @@ class PointsIterator(Iterator):
             raise ValueError(
                 "Non-matching number of points for the different parameters: " + message
             )
-        self.points_array = np.array(points).T
-
-        _logger.info("Number of model calls: %d", len(self.points_array))
-
-    def core_run(self):
-        """Run model."""
-        start_time = time.time()
-        self.output = self.model.evaluate(self.points_array)
-        end_time = time.time()
-        _logger.info("Model runs done, took %f seconds", end_time - start_time)
-
-    def post_run(self):
-        """Write results."""
-        if self.result_description is not None:
-            if self.result_description.get("write_results"):
-                results = {
-                    "n_points": len(self.points_array),
-                    "points": self.points,
-                    "output": self.output,
-                }
-
-                write_results(results, self.global_settings.result_file(".pickle"))
+        return np.array(points).T

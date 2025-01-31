@@ -291,8 +291,8 @@ class MLMCIterator(Iterator):
 
         self.output = {
             "mean": mean,
-            "var": std**2,
-            "std": std,
+            "variance": std**2,
+            "standard_deviation": std,
             "result": results_estimators,
             "mean_estimators": mean_estimators,
             "var_estimators": var_estimators,
@@ -302,10 +302,14 @@ class MLMCIterator(Iterator):
         if self.num_bootstrap_samples > 0:
             self.output["std_bootstrap"] = self._bootstrap(results_estimators)
 
+    def get_results(self):
+        return self.output
+
     def post_run(self):
         """Write results to result file."""
         write_results(
-            processed_results=self.output, file_path=self.global_settings.result_file(".pickle")
+            processed_results=self.get_results(),
+            file_path=self.global_settings.result_file(".pickle"),
         )
 
     def _bootstrap(self, results_estimators):

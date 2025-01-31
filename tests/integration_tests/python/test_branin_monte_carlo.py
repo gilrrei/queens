@@ -56,4 +56,4 @@ def test_branin_monte_carlo(global_settings):
     results = load_result(global_settings.result_file(".pickle"))
 
     assert results["mean"] == pytest.approx(55.81419875080866)
-    assert results["var"] == pytest.approx(2754.1188056842070)
+    assert results["variance"] == pytest.approx(2754.1188056842070)

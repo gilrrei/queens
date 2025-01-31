@@ -209,8 +209,7 @@ class VariationalInferenceIterator(Iterator):
     def post_run(self):
         """Write results and potentially visualize them."""
         if self.result_description["write_results"]:
-            result_dict = self._prepare_result_description()
-            write_results(result_dict, self.global_settings.result_file(".pickle"))
+            write_results(self.get_results(), self.global_settings.result_file(".pickle"))
 
         if qvis.vi_visualization_instance:
             qvis.vi_visualization_instance.save_plots()
@@ -234,8 +233,7 @@ class VariationalInferenceIterator(Iterator):
     def _write_results(self):
         """Write results to output file."""
         if self.result_description["write_results"]:
-            result_dict = self._prepare_result_description()
-            write_results(result_dict, self.global_settings.result_file(".pickle"))
+            write_results(self.get_results(), self.global_settings.result_file(".pickle"))
 
     def _initialize_variational_params(self):
         """Initialize the variational parameters.
@@ -328,7 +326,7 @@ class VariationalInferenceIterator(Iterator):
             )
         return x_mat_trans
 
-    def _prepare_result_description(self):
+    def get_results(self):
         """Create the dictionary for the result pickle file.
 
         Returns:

@@ -224,13 +224,13 @@ class RPVIIterator(VariationalInferenceIterator):
                 "Likelihood noise variance: %s", self.model.normal_distribution.covariance
             )
 
-    def _prepare_result_description(self):
+    def get_results(self):
         """Create the dictionary for the result pickle file.
 
         Returns:
             result_description (dict): Dictionary with result summary of the analysis
         """
-        result_description = super()._prepare_result_description()
+        result_description = super().get_results()
         if self.iteration_data:
             result_description["iteration_data"].update(self.iteration_data.to_dict())
         return result_description

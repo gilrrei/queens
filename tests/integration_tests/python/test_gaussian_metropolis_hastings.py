@@ -84,4 +84,4 @@ def test_gaussian_metropolis_hastings(
     # posterior std: [0.70710678]
     # however, we only have a very inaccurate approximation here:
     assert results["mean"] == pytest.approx(1.046641592648936)
-    assert results["var"] == pytest.approx(0.3190199514534667)
+    assert results["variance"] == pytest.approx(0.3190199514534667)

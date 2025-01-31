@@ -106,7 +106,17 @@ def test_metropolis_hastings_multiple_chains_multivariate_gaussian(
         ),
     )
     np.testing.assert_allclose(
-        results["cov"],
+        results["variance"],
+        np.array(
+            [
+                [0.1512735938813344, 0.05171405742642903],
+                [0.1785079764636951, 0.002351030358626913],
+                [0.0019646760257602874, 0.0029756857370753943],
+            ]
+        ),
+    )
+    np.testing.assert_allclose(
+        results["covariance"],
         np.array(
             [
                 [

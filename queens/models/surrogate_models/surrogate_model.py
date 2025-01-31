@@ -300,23 +300,11 @@ class SurrogateModel(Model):
             iterator (queens.iterators.Iterator): iterator where to get input and output from
 
         Returns:
-            x (ndarray): input (samples)
-            y (ndarray): output (response)
+            inputs (ndarray): input samples
+            outputs (ndarray): output response
         """
-        if hasattr(iterator, "samples"):
-            x = iterator.samples
-        else:
-            raise AttributeError(
-                f"Your iterator {type(iterator).__name__} has no samples and, thus, cannot be used "
-                f"for training or testing a surrogate model."
-            )
+        results = iterator.get_results()
+        inputs = results["inputs"]
+        outputs = results["outputs"]["result"]
 
-        if hasattr(iterator, "output"):
-            y = iterator.output["result"]
-        else:
-            raise AttributeError(
-                f"Your iterator {type(iterator).__name__} has no output data and, thus, cannot be "
-                f"used for training or testing a surrogate model."
-            )
-
-        return x, y
+        return inputs, outputs

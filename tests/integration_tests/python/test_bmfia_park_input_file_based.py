@@ -60,8 +60,8 @@ def test_bmfia_smc_park(
     result_file = tmp_path / "smc_park_mf.pickle"
     results = load_result(result_file)
 
-    samples = results["raw_output_data"]["particles"].squeeze()
-    weights = results["raw_output_data"]["weights"].squeeze()
+    samples = results["particles"].squeeze()
+    weights = results["weights"].squeeze()
 
     # some tests / asserts here
     np.testing.assert_array_almost_equal(samples, expected_samples, decimal=5)

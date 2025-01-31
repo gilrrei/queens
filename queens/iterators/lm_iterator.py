@@ -261,6 +261,9 @@ class LMIterator(Iterator):
         # store set of parameters which leads to the lowest residual as solution
         self.solution = self.param_opt
 
+    def get_results(self):
+        return {"optimal_parameters": self.param_opt}
+
     def post_run(self):
         """Post run.
 

@@ -64,11 +64,11 @@ def test_bmfmc_iterator_currin88_random_vars_diverse_design(
     results = load_result(result_file)
 
     # get the y_support and calculate HF MC reference
-    y_pdf_support = results["raw_output_data"]["y_pdf_support"]
+    y_pdf_support = results["outputs"]["y_pdf_support"]
 
     p_yhf_mc, _ = estimate_pdf(
         np.atleast_2d(hf_mc_data).T, bandwidth_lf_mc, support_points=np.atleast_2d(y_pdf_support)
     )
 
-    kl_divergence = entropy(p_yhf_mc, results["raw_output_data"]["p_yhf_mean"])
+    kl_divergence = entropy(p_yhf_mc, results["outputs"]["p_yhf_mean"])
     assert kl_divergence < 0.3

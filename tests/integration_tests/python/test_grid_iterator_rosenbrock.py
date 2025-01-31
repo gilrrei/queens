@@ -64,11 +64,11 @@ def test_grid_iterator(expected_response, expected_grid, global_settings):
     results = load_result(global_settings.result_file(".pickle"))
 
     np.testing.assert_array_equal(
-        results["raw_output_data"]["result"],
+        results["outputs"]["result"],
         expected_response,
     )
 
-    np.testing.assert_allclose(results["input_data"], expected_grid, rtol=1.0e-3)
+    np.testing.assert_allclose(results["inputs"], expected_grid, rtol=1.0e-3)
 
 
 @pytest.fixture(name="expected_grid")

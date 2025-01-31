@@ -24,7 +24,8 @@ import pymc as pm
 import pytensor.tensor as pt
 
 from queens.iterators.iterator import Iterator
-from queens.utils.process_outputs import process_outputs, write_results
+from queens.utils.process_outputs import write_results
+from queens.utils.sampler import get_samples_statistics
 from queens.utils.pymc import PymcDistributionWrapper, from_config_create_pymc_distribution_dict
 
 _logger = logging.getLogger(__name__)
@@ -279,10 +280,7 @@ class PyMCIterator(Iterator):
             model=self.pymc_model,
         )
 
-    def post_run(self):
-        """Post-Processing of Results."""
-        _logger.info("MCMC by PyMC results:")
-
+    def get_results(self):
         # get the chain as numpy array and dict
         inference_data_dict = {}
         is_inference_data = isinstance(self.results, az.InferenceData)
@@ -327,31 +325,38 @@ class PyMCIterator(Iterator):
 
         # process output takes a dict as input with key 'mean'
         results_dict = az.convert_to_inference_data(inference_data_dict)
-        results = process_outputs(
-            {"sample_stats": sample_stats, "result": self.chains, "inference_data": results_dict},
-            self.result_description,
-        )
+        results = get_samples_statistics(self.chains)
+        results["sample_stats"] = sample_stats
+        results["result"] = self.chains
+        results["inference_data"] = results_dict
+        return results
+
+    def post_run(self):
+        """Post-Processing of Results."""
+        _logger.info("MCMC by PyMC results:")
+
+        results = self.get_results()
         if self.result_description["write_results"]:
             write_results(results, self.global_settings.result_file(".pickle"))
 
-        self.results_dict = results_dict
+        results_dict = results["inference_data"]
         if self.summary:
             _logger.info("Inference summary:")
-            _logger.info(az.summary(self.results_dict))
+            _logger.info(az.summary(results_dict))
             _logger.info("Model forward evaluations: %i", self.model_fwd_evals)
             _logger.info("Model gradient evaluations: %i", self.model_grad_evals)
 
         if self.result_description["plot_results"]:
             _logger.info("Generate convergence plots, ignoring divergences for trace plotting.")
 
-            _axes = az.plot_trace(self.results_dict, divergences=None)
+            _axes = az.plot_trace(results_dict, divergences=None)
             plt.savefig(self.global_settings.result_file(suffix="_trace", extension=".png"))
 
-            _axes = az.plot_autocorr(self.results_dict)
+            _axes = az.plot_autocorr(results_dict)
             plt.savefig(self.global_settings.result_file(suffix="_autocorr", extension=".png"))
 
             _axes = az.plot_forest(
-                self.results_dict,
+                results_dict,
                 combined=True,
                 hdi_prob=0.95,
                 r_hat=True,
@@ -364,7 +369,7 @@ class PyMCIterator(Iterator):
             plt.savefig(self.global_settings.result_file(suffix="_forest", extension=".png"))
 
             if self.parameters.num_parameters < 17:
-                az.plot_density(self.results_dict, hdi_prob=0.99)
+                az.plot_density(results_dict, hdi_prob=0.99)
                 plt.savefig(self.global_settings.result_file(suffix="_marginals", extension=".png"))
 
             plt.close("all")

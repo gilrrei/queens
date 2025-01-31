@@ -86,8 +86,8 @@ def test_mlmc_borehole_given_num_samples(global_settings, parameters, models):
 
     # Test outputs.
     assert result["mean"] == pytest.approx(76.52224796054254)
-    assert result["var"] == pytest.approx(2.0511312684237075)
-    assert result["std"] == pytest.approx(1.4321771079107875)
+    assert result["variance"] == pytest.approx(2.0511312684237075)
+    assert result["standard_deviation"] == pytest.approx(1.4321771079107875)
     assert result["mean_estimators"] == pytest.approx([60.4546131, 16.06763486])
     assert result["var_estimators"] == pytest.approx([1266.89995688, 78.42313115])
     assert result["num_samples"] == pytest.approx([1000, 100])
@@ -110,8 +110,8 @@ def test_mlmc_borehole_bootstrap(global_settings, parameters, models):
     result = load_result(path_to_result_file=global_settings.result_file(".pickle"))
 
     assert result["mean"] == pytest.approx(76.52224796054254)
-    assert result["var"] == pytest.approx(2.0511312684237075)
-    assert result["std"] == pytest.approx(1.4321771079107875)
+    assert result["variance"] == pytest.approx(2.0511312684237075)
+    assert result["standard_deviation"] == pytest.approx(1.4321771079107875)
     assert result["mean_estimators"] == pytest.approx([60.4546131, 16.06763486])
     assert result["var_estimators"] == pytest.approx([1266.89995688, 78.42313115])
     assert result["num_samples"] == pytest.approx([1000, 100])
@@ -137,8 +137,8 @@ def test_mlmc_borehole_optimal_num_samples(global_settings, parameters, models):
 
     # Test outputs.
     assert result["mean"] == pytest.approx(77.9589082063506)
-    assert result["var"] == pytest.approx(0.8857499559585561)
-    assert result["std"] == pytest.approx(0.9411428987983472)
+    assert result["variance"] == pytest.approx(0.8857499559585561)
+    assert result["standard_deviation"] == pytest.approx(0.9411428987983472)
     assert result["mean_estimators"] == pytest.approx([61.89127335, 16.06763486])
     assert result["var_estimators"] == pytest.approx([1290.91108238, 78.42313115])
     assert result["num_samples"] == pytest.approx([12716, 100])

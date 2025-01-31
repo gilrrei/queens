@@ -24,7 +24,7 @@ from diversipy import psa_select
 import queens.visualization.bmfmc_visualization as qvis
 from queens.iterators.iterator import Iterator
 from queens.utils.logger_settings import log_init_args
-from queens.utils.process_outputs import process_outputs, write_results
+from queens.utils.process_outputs import write_results
 
 _logger = logging.getLogger(__name__)
 
@@ -277,6 +277,9 @@ class BMFMCIterator(Iterator):
                 n_points,
             )
 
+    def get_results(self):
+        return {"outputs": self.output}
+
     # ------------------- BELOW JUST PLOTTING AND SAVING RESULTS ------------------
     def post_run(self):
         """Saving and plotting the results."""
@@ -287,5 +290,4 @@ class BMFMCIterator(Iterator):
             )
 
         if self.result_description["write_results"] is True:
-            results = process_outputs(self.output, self.result_description)
-            write_results(results, self.global_settings.result_file(".pickle"))
+            write_results(self.get_results(), self.global_settings.result_file(".pickle"))

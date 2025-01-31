@@ -54,7 +54,7 @@ def test_points_iterator(inputs, expected_results, global_settings):
     results = load_result(global_settings.result_file(".pickle"))
 
     np.testing.assert_array_equal(
-        results["output"]["result"],
+        results["outputs"]["result"],
         expected_results,
     )
 

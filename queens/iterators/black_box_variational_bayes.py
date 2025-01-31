@@ -260,13 +260,13 @@ class BBVIIterator(VariationalInferenceIterator):
             _logger.info("Likelihood noise variance: %s", self.model.normal_distribution.covariance)
         _logger.info("-" * 80)
 
-    def _prepare_result_description(self):
+    def get_results(self):
         """Creates the dictionary for the result pickle file.
 
         Returns:
             result_description (dict): Dictionary with result summary of the analysis
         """
-        result_description = super()._prepare_result_description()
+        result_description = super().get_results()
         result_description.update(
             {
                 "control_variates_scaling_type": self.control_variates_scaling_type,

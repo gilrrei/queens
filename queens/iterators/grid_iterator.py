@@ -18,12 +18,11 @@ import numpy as np
 
 import queens.visualization.grid_iterator_visualization as qvis
 from queens.utils.logger_settings import log_init_args
-from queens.utils.process_outputs import process_outputs, write_results
 
-from .iterator import Iterator
+from queens.iterators.sequence_iterator import SequenceIterator
 
 
-class GridIterator(Iterator):
+class GridIterator(SequenceIterator):
     """Grid Iterator to enable meshgrid evaluations.
 
     Different axis scaling possible: as *linear*, *log10* or *ln*.
@@ -57,11 +56,8 @@ class GridIterator(Iterator):
             result_description (dict):  Description of desired results
             grid_design (dict): Dictionary containing grid information
         """
-        super().__init__(model, parameters, global_settings)
+        super().__init__(model, parameters, global_settings, None, result_description)
         self.grid_dict = grid_design
-        self.result_description = result_description
-        self.samples = None
-        self.output = None
         self.num_grid_points_per_axis = []
         self.num_parameters = self.parameters.num_parameters
         self.scale_type = []
@@ -70,7 +66,7 @@ class GridIterator(Iterator):
         if result_description.get("plotting_options"):
             qvis.from_config_create(result_description.get("plotting_options"), grid_design)
 
-    def pre_run(self):
+    def generate_inputs(self):
         """Generate samples based on description in *grid_dict*."""
         # Sanity check for random fields
         if self.parameters.random_field_flag:
@@ -153,26 +149,20 @@ class GridIterator(Iterator):
                 )
 
         grid_coords = np.meshgrid(*grid_point_list)
-        self.samples = np.empty([np.prod(self.num_grid_points_per_axis), self.num_parameters])
+        inputs = np.empty([np.prod(self.num_grid_points_per_axis), self.num_parameters])
         for i in range(self.num_parameters):
-            self.samples[:, i] = grid_coords[i].flatten()
-
-    def core_run(self):
-        """Evaluate the meshgrid on model."""
-        self.output = self.model.evaluate(self.samples)
+            inputs[:, i] = grid_coords[i].flatten()
+        return inputs
 
     def post_run(self):
         """Analyze the results."""
-        if self.result_description is not None:
-            results = process_outputs(self.output, self.result_description, self.samples)
-            if self.result_description["write_results"]:
-                write_results(results, self.global_settings.result_file(".pickle"))
+        super().post_run()
 
         # plot QoI over grid
         if qvis.grid_iterator_visualization_instance:  # pylint: disable=no-member
             qvis.grid_iterator_visualization_instance.plot_qoi_grid(  # pylint: disable=no-member
-                self.output,
-                self.samples,
+                self.outputs,
+                self.inputs,
                 self.num_parameters,
                 self.num_grid_points_per_axis,
             )

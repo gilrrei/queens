@@ -58,4 +58,4 @@ def test_branin_latin_hyper_cube(global_settings):
     results = load_result(global_settings.result_file(".pickle"))
 
     assert results["mean"] == pytest.approx(53.17279969296224)
-    assert results["var"] == pytest.approx(2581.6502630157715)
+    assert results["variance"] == pytest.approx(2581.6502630157715)

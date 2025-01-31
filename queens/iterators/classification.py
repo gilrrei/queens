@@ -169,13 +169,15 @@ class ClassificationIterator(Iterator):
         np.random.shuffle(idx)
         return idx[: self.classifier.batch_size].flatten()
 
+    def get_results(self):
+        return {"classified_outputs": self.classified_outputs, "input_samples": self.samples}
+
     def post_run(self):
         """Analyze the results."""
         if self.result_description:
-            results = {"classified_outputs": self.classified_outputs, "input_samples": self.samples}
             if self.result_description["write_results"]:
                 write_results(
-                    results,
+                    self.get_results(),
                     self.global_settings.result_file(".pickle"),
                 )
 

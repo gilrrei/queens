@@ -67,13 +67,7 @@ def test_branin_gpflow_svgp(expected_mean, expected_var, global_settings):
     iterator = MonteCarloIterator(
         seed=44,
         num_samples=10,
-        result_description={
-            "write_results": True,
-            "plot_results": False,
-            "bayesian": False,
-            "num_support_points": 10,
-            "estimate_all": False,
-        },
+        result_description={"write_results": True},
         model=model,
         parameters=parameters,
         global_settings=global_settings,
@@ -85,7 +79,7 @@ def test_branin_gpflow_svgp(expected_mean, expected_var, global_settings):
     # Load results
     results = load_result(global_settings.result_file(".pickle"))
 
-    assert_monte_carlo_iterator_results(results, expected_mean, expected_var)
+    assert_monte_carlo_iterator_results(results["outputs"], expected_mean, expected_var)
 
 
 @pytest.fixture(name="expected_mean")

@@ -54,4 +54,4 @@ def test_branin_data_iterator(mocker, ref_result_iterator, global_settings):
     results = load_result(global_settings.result_file(".pickle"))
 
     assert results["mean"] == pytest.approx(1.3273452195599997)
-    assert results["var"] == pytest.approx(44.82468751096612)
+    assert results["variance"] == pytest.approx(44.82468751096612)

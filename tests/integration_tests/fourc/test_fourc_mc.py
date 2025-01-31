@@ -84,7 +84,7 @@ def test_fourc_mc(
     try:
         # assert statements
         np.testing.assert_array_almost_equal(
-            results["raw_output_data"]["result"], fourc_example_expected_output, decimal=6
+            results["result"], fourc_example_expected_output, decimal=6
         )
     except (AssertionError, KeyError) as error:
         experiment_dir = experiment_directory(global_settings.experiment_name)
