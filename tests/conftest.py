@@ -313,3 +313,11 @@ def fixture_global_settings(test_name, tmp_path):
     # wrap the tests in a global settings context
     with global_settings:
         yield global_settings
+
+
+def pytest_deselected(items):
+    for item in items:
+        for marker in item.iter_markers():
+            if marker.name in ["max_time_for_test", "parametrize"]:
+                continue
+            print(f"Test: {item.nodeid}, Marker: {marker.name}")
