@@ -35,8 +35,8 @@ from queens.iterators.nuts_iterator import NUTSIterator
 from queens.iterators.optimization_iterator import OptimizationIterator
 from queens.iterators.points_iterator import PointsIterator
 from queens.iterators.polynomial_chaos_iterator import PolynomialChaosIterator
+from queens.iterators.reinforcement_learning import ReinforcementLearning
 from queens.iterators.reparameteriztion_based_variational_inference import RPVIIterator
-from queens.iterators.rl_iterator import RLIterator
 from queens.iterators.sequential_monte_carlo_chopin import SequentialMonteCarloChopinIterator
 from queens.iterators.sequential_monte_carlo_iterator import SequentialMonteCarloIterator
 from queens.iterators.sobol_index_gp_uncertainty_iterator import SobolIndexGPUncertaintyIterator
@@ -67,5 +67,5 @@ VALID_TYPES = {
     "bmfia": BMFIAIterator,
     "rpvi": RPVIIterator,
     "classification": ClassificationIterator,
-    "rl": RLIterator,
+    "reinforcement_learning": ReinforcementLearning,
 }
