@@ -18,6 +18,7 @@ import argparse
 import logging
 import sys
 from pathlib import Path
+from typing import Sequence
 
 from queens.utils import ascii_art
 from queens.utils.exceptions import CLIError
@@ -37,7 +38,7 @@ def cli_logging(func):
     """Decorator to create logger for CLI function.
 
     Args:
-        func (function): Function that is to be decorated
+        func: Function that is to be decorated
     """
 
     def decorated_function(*args, **kwargs):
@@ -216,14 +217,14 @@ def remove_html_coverage_report():
     run_subprocess(command_string)
 
 
-def str_to_bool(value):
+def str_to_bool(value: str) -> bool:
     """Convert string to boolean for cli commands.
 
     Args:
-        value (str): String to convert to a bool
+        value: String to convert to a bool
 
     Returns:
-        bool: Bool of the string
+        Bool of the string
     """
     if isinstance(value, bool):
         return value
@@ -240,16 +241,16 @@ def str_to_bool(value):
     )
 
 
-def get_cli_options(args):
+def get_cli_options(args: Sequence[str]) -> tuple[Path, Path, bool]:
     """Get input file path, output directory and debug from args.
 
     Args:
-        args (list): cli arguments
+        args: cli arguments
 
     Returns:
-        input_file (Path): Path object to input file
-        output_dir (Path): Path object to the output directory
-        debug (bool):      *True* if debug mode is to be used
+        Path object to input file
+        Path object to the output directory
+        True if debug mode is to be used
     """
     parser = argparse.ArgumentParser(description="QUEENS")
     parser.add_argument(
@@ -263,17 +264,17 @@ def get_cli_options(args):
     )
     parser.add_argument("--debug", type=str_to_bool, default=False, help="Debug mode yes/no.")
 
-    args = parser.parse_args(args)
+    arguments = parser.parse_args(args)
 
-    if args.input is None:
+    if arguments.input is None:
         raise CLIError("No input file was provided with option --input.")
 
-    if args.output_dir is None:
+    if arguments.output_dir is None:
         raise CLIError("No output directory was provided with option --output_dir.")
 
-    debug = args.debug
-    output_dir = Path(args.output_dir)
-    input_file = Path(args.input)
+    debug = arguments.debug
+    output_dir = Path(arguments.output_dir)
+    input_file = Path(arguments.input)
 
     return input_file, output_dir, debug
 

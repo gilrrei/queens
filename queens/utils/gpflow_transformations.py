@@ -35,11 +35,11 @@ def init_scaler(unscaled_data):
         :math:`scaled\_data = \frac{unscaled\_data - mean}{std}`
 
     Args:
-        unscaled_data (np.ndarray): Unscaled data
+        unscaled_data: Unscaled data
 
     Returns:
-        scaler (StandardScaler): Standard scaler
-        scaled_data (np.ndarray): Scaled data
+        Standard scaler
+        Scaled data
     """
     scaler = StandardScaler()
     scaler.fit(unscaled_data)
@@ -51,8 +51,8 @@ def set_transform_function(data, transform):
     """Set transform function.
 
     Args:
-        data (gpf.Parameter): Data to be transformed
-        transform (tfp.bijectors.Bijector): Transform function
+        data: Data to be transformed
+        transform: Transform function
 
     Returns:
         gpf.Parameter with transform

@@ -35,22 +35,25 @@ cheap functions the communication overhead is too high.
 For expensive function the exploitation ensures significant speed up.
 """
 
+
 import numpy as np
-from scipy.optimize._numdiff import (
+from scipy.optimize._numdiff import (  # type: ignore[import-untyped]
     _adjust_scheme_to_bounds,
     _compute_absolute_step,
     _prepare_bounds,
 )
 
 
-def compute_step_with_bounds(x0, method, rel_step, bounds):
+def compute_step_with_bounds(
+    x0: np.ndarray, method: str, rel_step: np.ndarray | None, bounds: tuple | np.ndarray | None
+) -> tuple[np.ndarray, np.ndarray]:
     """Compute step sizes of finite difference scheme adjusted to bounds.
 
     Args:
-        x0 (ndarray, shape(n,)):
+        x0:
             Point at which the derivative shall be evaluated
 
-        method (string): {'3-point', '2-point'}, optional
+        method: {'3-point', '2-point'}, optional
 
             Finite difference method to use:
                 * '2-point' - use the first order accuracy forward or
@@ -63,7 +66,7 @@ def compute_step_with_bounds(x0, method, rel_step, bounds):
                   scipy.optimize library. **But:**
                   NOT IMPLEMENTED in QUEENS
 
-        rel_step (None or array_like, optional):
+        rel_step:
             Relative step size to use.
             The absolute step size is computed as
             `h = rel_step * sign(x0) * max(1, abs(x0))`,
@@ -72,7 +75,7 @@ def compute_step_with_bounds(x0, method, rel_step, bounds):
             If None (default) then step is selected automatically,
             see Notes.
 
-        bounds (tuple of array_like, optional):
+        bounds:
             Lower and upper bounds on independent variables.
             Defaults to no bounds.
             Each bound must match the size of *x0* or be a scalar,
@@ -80,8 +83,8 @@ def compute_step_with_bounds(x0, method, rel_step, bounds):
             variables. Use it to limit the range of function evaluation.
 
     Returns:
-        h (numpy.ndarray): Adjusted step sizes
-        use_one_sided (numpy.ndarray of bool): Whether to switch to one-sided scheme due to
+        Adjusted step sizes
+        Whether to switch to one-sided scheme due to
           closeness to bounds. Informative only for 3-point method
     """
     lb, ub = _prepare_bounds(bounds, x0)
@@ -104,7 +107,9 @@ def compute_step_with_bounds(x0, method, rel_step, bounds):
     return h, use_one_sided
 
 
-def get_positions(x0, method, rel_step, bounds):
+def get_positions(
+    x0: np.ndarray, method: str, rel_step: np.ndarray | None, bounds: tuple | np.ndarray | None
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """Compute all positions needed for the finite difference approximation.
 
     The Jacobian is defined for a vector-valued function at a given position.
@@ -113,10 +118,10 @@ def get_positions(x0, method, rel_step, bounds):
     *scipy._numdiff.approx_derivative*.
 
     Args:
-       x0 (np.array): Position or sample at which the Jacobian shall be computed.
-       method (str): Finite difference method that is used to compute the Jacobian.
-       rel_step (float): Finite difference step size.
-       bounds (tuple of array_like, optional): Lower and upper bounds on independent variables.
+       x0: Position or sample at which the Jacobian shall be computed.
+       method: Finite difference method that is used to compute the Jacobian.
+       rel_step: Finite difference step size.
+       bounds: Lower and upper bounds on independent variables.
                                                Defaults to no bounds.
                                                Each bound must match the size of *x0* or be a
                                                scalar, in the latter case the bound will be the
@@ -124,10 +129,10 @@ def get_positions(x0, method, rel_step, bounds):
                                                function evaluation.
 
     Returns:
-        additional_positions (list of numpy.ndarray): List with additional stencil positions that
+        List with additional stencil positions that
                                                       are necessary to calculate the finite
                                                       difference approximation to the gradient
-        delta_positions (list of numpy.ndarray): Delta between positions used
+        Delta between positions used
                                                   to approximate Jacobian
     """
     h, use_one_sided = compute_step_with_bounds(x0, method, rel_step, bounds)
@@ -174,7 +179,9 @@ def get_positions(x0, method, rel_step, bounds):
     return additional_positions, delta_positions, use_one_sided
 
 
-def fd_jacobian(f0, f_perturbed, dx, use_one_sided, method):
+def fd_jacobian(
+    f0: np.ndarray, f_perturbed: np.ndarray, dx: np.ndarray, use_one_sided: np.ndarray, method: str
+) -> np.ndarray:
     """Calculate finite difference approximation of Jacobian of *f* at *x0*.
 
     The necessary function evaluation have been pre-calculated and are
@@ -193,27 +200,27 @@ def fd_jacobian(f0, f_perturbed, dx, use_one_sided, method):
     *scipy._numdiff.approx_derivative*.
 
     Args:
-        f0 (ndarray): Function value at *x0*, *f0=f(x0)*
-        f_perturbed (ndarray): Perturbed function values
-        dx (ndarray): Deltas of the input variables
-        use_one_sided (ndarray of bool): Whether to switch to one-sided
+        f0: Function value at *x0*, *f0=f(x0)*
+        f_perturbed: Perturbed function values
+        dx: Deltas of the input variables
+        use_one_sided: Whether to switch to one-sided
                                          scheme due to closeness to bounds;
                                          informative only for 3-point method
-        method (str): Which scheme was used to calculate the perturbed
+        method: Which scheme was used to calculate the perturbed
                       function values and deltas
     Returns:
-        J_transposed.T (np.array): Jacobian of the underlying model at x0.
+        Jacobian of the underlying model at x0.
     """
     num_feval_perturbed = f_perturbed.shape[0]
 
     if method == "2-point":
-        f1 = np.stack(f_perturbed, axis=0)
+        f1 = np.stack(f_perturbed, axis=0)  # type: ignore[call-overload]
 
         df = f1 - f0
     elif method == "3-point":
         len_f1 = int(num_feval_perturbed / 2)
-        f1 = np.stack(f_perturbed[0:len_f1], axis=0)
-        f2 = np.stack(f_perturbed[len_f1:], axis=0)
+        f1 = np.stack(f_perturbed[0:len_f1], axis=0)  # type: ignore[call-overload]
+        f2 = np.stack(f_perturbed[len_f1:], axis=0)  # type: ignore[call-overload]
         df = np.empty(f1.shape)
         for i in range(use_one_sided.size):
             if use_one_sided[i]:

@@ -17,15 +17,16 @@
 import logging
 
 from pathos.multiprocessing import ProcessingPool as Pool
+from pathos.multiprocessing import ProcessPool
 
 _logger = logging.getLogger(__name__)
 
 
-def create_pool(number_of_workers):
+def create_pool(number_of_workers: int) -> ProcessPool | None:
     """Create pathos Pool from number of workers.
 
     Args:
-        number_of_workers (int): Number of parallel evaluations
+        number_of_workers: Number of parallel evaluations
 
     Returns:
         pathos multiprocessing pool

@@ -17,6 +17,7 @@
 import logging
 import types
 from pathlib import Path
+from typing import Any
 
 import black
 
@@ -66,33 +67,33 @@ class QueensPythonCode:
         create_main (bool): True if the script should contain a main function
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize object."""
         self.imports = DEFAULT_IMPORTS
         self.run_iterator = RUN_ITERATOR
         self.load_results = LOAD_RESULTS
         self.global_settings_context = GLOBAL_SETTINGS_CONTEXT
-        self.code = []
-        self.parameters = []
-        self.global_settings = []
-        self.extern_imports = []
+        self.code: list[str] = []
+        self.parameters: list[str] = []
+        self.global_settings: list[str] = []
+        self.extern_imports: list[str] = []
         self.create_main = False
 
-    def generate_script(self):
+    def generate_script(self) -> str:
         """Format python code using black.
 
         Returns:
-            str: formatted python code
+            formatted python code
         """
         mode = black.FileMode()
         fast = False
         return black.format_file_contents(self.generate_code(), fast=fast, mode=mode)
 
-    def generate_code(self):
+    def generate_code(self) -> str:
         """Generate the python code for the QUEENS run.
 
         Returns:
-            str: python code
+            python code
         """
         script = self.create_code_section(list(set(DEFAULT_IMPORTS)))
         if self.extern_imports:
@@ -133,20 +134,22 @@ class QueensPythonCode:
         return script
 
     @staticmethod
-    def create_code_section(code_list, comment=None, indent_level=0):
+    def create_code_section(
+        code_list: list[str], comment: str | None = None, indent_level: int = 0
+    ) -> str:
         """Create python code section from a list of code lines.
 
         Args:
-            code_list (list): list with code lines
-            comment (str, optional): comment for this code section
-            indent_level (int, optional): indent of this code block
+            code_list: list with code lines
+            comment: comment for this code section
+            indent_level: indent of this code block
 
         Returns:
-            str: code section
+            code section
         """
         section = "\n\n"
         indent = INDENT * indent_level
-        if comment:
+        if comment is not None:
             section += indent + "# " + comment
         section += f"\n{indent}"
         section += f"\n{indent}".join(code_list)
@@ -157,11 +160,11 @@ class QueensPythonCode:
 class VariableName:
     """Dummy class to differentiate between variable names and strings."""
 
-    def __init__(self, name):
+    def __init__(self, name: str) -> None:
         """Initialize class.
 
         Args:
-            name (str): variable name
+            name: variable name
         """
         self.name = name
 
@@ -169,28 +172,28 @@ class VariableName:
         """Return repring str of object.
 
         Returns:
-            str: return variable name
+            return variable name
         """
         return self.name
 
-    def __str__(self):
+    def __str__(self) -> str:
         """Return str of object.
 
         Returns:
-            str: return variable name
+            return variable name
         """
         return self.name
 
 
-def dict_replace_infs(dictionary_to_modify):
+def dict_replace_infs(dictionary_to_modify: dict) -> dict:
     """Replace infs in nested dictionaries with `float(inf)`.
 
     The solution originates from https://stackoverflow.com/a/60776516
     Args:
-        dictionary_to_modify (dict): dictionary to modify
+        dictionary_to_modify: dictionary to modify
 
     Returns:
-        dictionary: modified dictionary
+        modified dictionary
     """
     updated_dict = {}
     for key, value in dictionary_to_modify.items():
@@ -199,20 +202,20 @@ def dict_replace_infs(dictionary_to_modify):
         elif isinstance(value, list):
             value = list_replace_infs(value)
         elif value in [float("inf"), float("-inf")]:
-            return VariableName(f'float("{value}")')
+            updated_dict[key] = VariableName(f'float("{value}")')
         updated_dict[key] = value
     return updated_dict
 
 
-def list_replace_infs(list_to_modify):
+def list_replace_infs(list_to_modify: list) -> list:
     """Replace infs in nested list with `float(inf)`.
 
     The solution originates from https://stackoverflow.com/a/60776516
     Args:
-        list_to_modify (list): list to modify
+        list_to_modify: list to modify
 
     Returns:
-        list: modified list
+        modified list
     """
     new_list = []
     for entry in list_to_modify:
@@ -221,19 +224,19 @@ def list_replace_infs(list_to_modify):
         elif isinstance(entry, dict):
             entry = dict_replace_infs(entry)
         elif entry in [float("inf"), float("-inf")]:
-            return VariableName(f'float("{entry}")')
+            entry = VariableName(f'float("{entry}")')
         new_list.append(entry)
     return new_list
 
 
-def stringify(obj):
+def stringify(obj: Any) -> Any:
     """Wrap string in quotes for the source code.
 
     Args:
-        obj (obj): object for the code
+        obj: object for the code
 
     Returns:
-        str: string version of the object
+        string version of the object
     """
     match obj:
         case str():
@@ -249,29 +252,33 @@ def stringify(obj):
             return str(obj)
 
 
-def create_initialization_call_from_class_and_arguments(class_name, arguments):
+def create_initialization_call_from_class_and_arguments(
+    class_name: str, arguments: dict[str, Any]
+) -> str:
     """Create a initialization call.
 
     Args:
-        class_name (str): name of the class to initialize
-        arguments (dict): keyword arguments for the object
+        class_name: name of the class to initialize
+        arguments: keyword arguments for the object
 
     Returns:
-        str: code  class_name(argument1=value1,...)
+        code  class_name(argument1=value1,...)
     """
     string_of_arguments = ", ".join([f"{k}={stringify(v)}" for (k, v) in arguments.items()])
     return f"{class_name}({string_of_arguments})"
 
 
-def create_initialization_call(obj_description, python_code):
+def create_initialization_call(
+    obj_description: dict[str, Any], python_code: QueensPythonCode
+) -> str:
     """Create a initialization call.
 
     Args:
-        obj_description (dict): keyword arguments for the object
-        python_code (QueensPythonCode): object to store the code in
+        obj_description: keyword arguments for the object
+        python_code: object to store the code in
 
     Returns:
-        str: code  "class_name(argument1=value1,...)"
+        code  "class_name(argument1=value1,...)"
     """
     object_class, class_name = get_module_class(obj_description, VALID_TYPES, python_code)
 
@@ -291,25 +298,27 @@ def create_initialization_call(obj_description, python_code):
     return create_initialization_call_from_class_and_arguments(class_name, obj_description)
 
 
-def assign_variable_value(variable_name, value):
+def assign_variable_value(variable_name: str, value: str) -> str:
     """Create code to assign value.
 
     Args:
-        variable_name (str): name of the variable
-        value (str): value to assign
+        variable_name: name of the variable
+        value: value to assign
 
     Returns:
-        str: code line
+        code line
     """
     return variable_name + "=" + value
 
 
-def from_config_create_fields_code(random_field_preprocessor_options, python_code):
+def from_config_create_fields_code(
+    random_field_preprocessor_options: dict, python_code: QueensPythonCode
+):
     """Create code to preprocess random fields.
 
     Args:
-        random_field_preprocessor_options (dict): random field description
-        python_code (QueensPythonCode): object to store the code in
+        random_field_preprocessor_options: random field description
+        python_code: object to store the code in
     """
     random_field_preprocessor = create_initialization_call(
         random_field_preprocessor_options, python_code
@@ -319,12 +328,14 @@ def from_config_create_fields_code(random_field_preprocessor_options, python_cod
     python_code.parameters.append("random_field_preprocessor.write_random_fields_to_dat()")
 
 
-def from_config_create_parameters(parameters_options, python_code):
+def from_config_create_parameters(
+    parameters_options: dict[str, Any], python_code: QueensPythonCode
+) -> None:
     """Create a QUEENS parameter object from config.
 
     Args:
-        parameters_options (dict): Parameters description
-        python_code (QueensPythonCode): object to store the code in
+        parameters_options: Parameters description
+        python_code: object to store the code in
     """
     joint_parameters_dict = {}
     for parameter_name, parameter_dict in parameters_options.items():
@@ -359,18 +370,23 @@ def from_config_create_parameters(parameters_options, python_code):
     )
 
 
-def get_module_class(module_options, valid_types, code, module_type_specifier="type"):
+def get_module_class(
+    module_options: dict[str, Any],
+    valid_types: dict[str, Any],
+    code: QueensPythonCode,
+    module_type_specifier: str = "type",
+) -> tuple[type, str]:
     """Return module class defined in config file.
 
     Args:
-        module_options (dict): Module options
-        valid_types (dict): Dict of valid types with corresponding module paths and class names
-        code (QueensPythonCode): Object to store the code in
-        module_type_specifier (str): Specifier for the module type
+        module_options: Module options
+        valid_types: Dict of valid types with corresponding module paths and class names
+        code: Object to store the code in
+        module_type_specifier: Specifier for the module type
 
     Returns:
-        module_class (class): Class from the module
-        module_attribute (str): Name of the class
+        Class from the module
+        Name of the class
     """
     # determine which object to create
     module_type = module_options.pop(module_type_specifier)
@@ -392,19 +408,21 @@ def get_module_class(module_options, valid_types, code, module_type_specifier="t
     return module_class, module_attribute
 
 
-def insert_new_obj(config, new_obj_key, new_obj, python_code):
+def insert_new_obj(
+    config: dict, new_obj_key: str, new_obj: str, python_code: QueensPythonCode
+) -> dict[str, Any]:
     """Insert new object to the script.
 
     Note that this implementation deviates from the on in the fcc_utils
 
     Args:
-        config (dict): Description of queens run, or sub dictionary
-        new_obj_key (str): Key of initialized object
-        new_obj (obj): Initialized object
-        python_code (QueensPythonCode): object to store the code in
+        config: Description of queens run, or sub dictionary
+        new_obj_key: Key of initialized object
+        new_obj: Initialized object
+        python_code: object to store the code in
 
     Returns:
-        config (dict): modified problem description
+        modified problem description
     """
     referenced_keys = []
     for key, value in config.items():
@@ -420,15 +438,18 @@ def insert_new_obj(config, new_obj_key, new_obj, python_code):
     return config
 
 
-def from_config_create_script(config, output_dir):
+def from_config_create_script(
+    config: dict,
+    output_dir: Path,
+) -> str:
     """Create a python script from input file.
 
     Args:
-        config (dict): Description of the QUEENS run
-        output_dir (pathlib.Path): output directory
+        config: Description of the QUEENS run
+        output_dir: output directory
 
     Returns:
-        str: python script for QUEENS
+        python script for QUEENS
     """
     python_code = QueensPythonCode()
 
@@ -476,15 +497,17 @@ def from_config_create_script(config, output_dir):
     raise RuntimeError()
 
 
-def create_script_from_input_file(input_file, output_dir, script_path=None):
+def create_script_from_input_file(
+    input_file: Path, output_dir: Path, script_path: Path | None = None
+) -> None:
     """Create script from input file.
 
     Keep in mind that this does not work with jinja2 templates, only with
 
     Args:
-        input_file  (pathlib.Path): Input file path
-        output_dir  (pathlib.Path): Path to write the QUEENS run results
-        script_path (pathlib.Path, optional): Path for the python script
+        input_file : Input file path
+        output_dir : Path to write the QUEENS run results
+        script_path: Path for the python script
     """
     input_file = Path(input_file)
     output_dir = Path(output_dir)

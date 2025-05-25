@@ -15,12 +15,13 @@
 """Path utilities for QUEENS."""
 
 from pathlib import Path
+from typing import Sequence
 
 PATH_TO_SOURCE = Path(__file__).parents[1]
 PATH_TO_QUEENS = Path(__file__).parents[2]
 
 
-def relative_path_from_source(relative_path):
+def relative_path_from_source(relative_path: str) -> Path:
     """Create relative path from *queens/*.
 
     As an example to create: *queens/queens/folder/file.A*.
@@ -28,15 +29,15 @@ def relative_path_from_source(relative_path):
     Call *relative_path_from_source("folder/file.A")* .
 
     Args:
-        relative_path (str): "Path" starting from *queens/queens/*
+        relative_path: "Path" starting from *queens/queens/*
     Returns:
-        PosixPath: Absolute path to the file
+        Absolute path to the file
     """
     full_path = PATH_TO_SOURCE / relative_path
     return full_path
 
 
-def relative_path_from_queens(relative_path):
+def relative_path_from_queens(relative_path: str) -> Path:
     """Create relative path from *queens/*.
 
     As an example to create: *queens/queens/folder/file.A* .
@@ -44,41 +45,41 @@ def relative_path_from_queens(relative_path):
     Call *relative_path_from_source("queens/folder/file.A")* .
 
     Args:
-        relative_path (str): "Path" starting from *queens/*
+        relative_path: "Path" starting from *queens/*
 
     Returns:
-        PosixPath: Absolute path to the file
+        Absolute path to the file
     """
     full_path = PATH_TO_QUEENS / relative_path
     return full_path
 
 
-def create_folder_if_not_existent(path):
+def create_folder_if_not_existent(path: Path | str) -> Path:
     """Create folder if not existent.
 
     Args:
-        path (PosixPath): Path to be created
+        path: Path to be created
 
     Returns:
-        path_obj (PosixPath): Path object
+        Path object
     """
     path_obj = Path(path)
     path_obj.mkdir(parents=True, exist_ok=True)
     return path_obj
 
 
-def check_if_path_exists(path, error_message=""):
+def check_if_path_exists(path: Path, error_message: str = "") -> bool:
     """Check if a path exists.
 
     Args:
-        path (str): "Path" to be checked
-        error_message (str,optional): If an additional message is desired
+        path: "Path" to be checked
+        error_message: If an additional message is desired
 
     Returns:
-        bool: `True` if the path exists, `False` otherwise.
+        `True` if the path exists, `False` otherwise.
 
-    Raises:
-        FileNotFoundError: If the path does not exist.
+
+        If the path does not exist.
     """
     path_exists = Path(path).exists()
 
@@ -88,11 +89,11 @@ def check_if_path_exists(path, error_message=""):
     return path_exists
 
 
-def is_empty(paths):
+def is_empty(paths: Sequence | str | Path) -> bool:
     """Check whether paths is empty.
 
     Args:
-        paths (str, Path, list): (list of) path like objects
+        paths: (list of) path like objects
     """
     if not isinstance(paths, (str, Path, list)):
         raise TypeError("paths must be a string, a Path object, or a list.")

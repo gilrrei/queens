@@ -18,23 +18,26 @@ Taken from
 https://gist.github.com/slinderman/24552af1bdbb6cb033bfea9b2dc4ecfd
 """
 
+from typing import Callable, Sequence
+
 import numpy as onp
 import scipy.optimize
 from jax import grad, jit
 from jax.flatten_util import ravel_pytree
+from scipy.optimize._optimize import OptimizeResult
 
 
 def minimize(
-    fun,
-    x0,
-    method=None,
-    args=(),
-    bounds=None,
-    constraints=(),
-    tol=None,
-    callback=None,
-    options=None,
-):
+    fun: Callable,
+    x0: onp.ndarray,
+    method: str | None = None,
+    args: tuple = (),
+    bounds: Sequence | None = None,
+    constraints: Sequence = (),
+    tol: float | None = None,
+    callback: Callable | None = None,
+    options: dict | None = None,
+) -> OptimizeResult:
     """A simple wrapper for scipy.optimize.minimize using JAX.
 
     Args:
@@ -136,11 +139,11 @@ def minimize(
             where `xk` is the current parameter vector, represented as a PyTree.
 
     Returns:
-        res : The optimization result represented as a ``OptimizeResult`` object.
-        Important attributes are:
-            ``x``: the solution array, represented as a JAX PyTree
-            ``success``: a Boolean flag indicating if the optimizer exited successfully
-            ``message``: describes the cause of the termination.
+        The optimization result represented as a ``OptimizeResult`` object.
+
+        the solution array, represented as a JAX PyTree
+        a Boolean flag indicating if the optimizer exited successfully
+        describes the cause of the termination.
         See `scipy.optimize.OptimizeResult` for a description of other attributes.
     """
     # Use tree flatten and unflatten to convert params x0 from PyTrees to flat arrays

@@ -16,17 +16,19 @@
 
 import logging
 import types
+from typing import Any
 
 from queens.data_processors import VALID_TYPES as VALID_DATA_PROCESSOR_TYPES
 from queens.distributions import VALID_TYPES as VALID_DISTRIBUTION_TYPES
 from queens.drivers import VALID_TYPES as VALID_DRIVER_TYPES
 from queens.drivers._driver import Driver
 from queens.external_geometries import VALID_TYPES as VALID_EXTERNAL_GEOMETRY_TYPES
+from queens.global_settings import GlobalSettings
 from queens.iterators import VALID_TYPES as VALID_ITERATOR_TYPES
 from queens.iterators._iterator import Iterator
 from queens.models import VALID_TYPES as VALID_MODEL_TYPES
 from queens.models.bmfmc import BMFMC
-from queens.parameters.parameters import from_config_create_parameters
+from queens.parameters.parameters import Parameters, from_config_create_parameters
 from queens.parameters.random_fields import VALID_TYPES as VALID_RANDOM_FIELD_TYPES
 from queens.schedulers import VALID_TYPES as VALID_SCHEDULER_TYPES
 from queens.schedulers import Scheduler
@@ -63,7 +65,9 @@ VALID_TYPES = {
 }
 
 
-def from_config_create_iterator(config, global_settings):
+def from_config_create_iterator(
+    config: dict[str, Any], global_settings: GlobalSettings
+) -> Iterator:
     """Create main iterator for queens run from config.
 
     A bottom up approach is used here to create all objects from the description. First, the objects
@@ -74,12 +78,12 @@ def from_config_create_iterator(config, global_settings):
     'method' keyword) is initialized.
 
     Args:
-        config (dict): Description of the queens run
-        global_settings (GlobalSettings): settings of the QUEENS experiment including its name
+        config: Description of the queens run
+        global_settings: settings of the QUEENS experiment including its name
                           and the output directory
 
     Returns:
-        new_obj (iterator): Main queens iterator with all initialized objects.
+        Main queens iterator with all initialized objects.
     """
     # do pre-processing
     random_field_preprocessor = None
@@ -128,17 +132,21 @@ def from_config_create_iterator(config, global_settings):
     )
 
 
-def from_config_create_object(obj_description, global_settings=None, parameters=None):
+def from_config_create_object(
+    obj_description: dict[str, Any],
+    global_settings: GlobalSettings | None = None,
+    parameters: Parameters | None = None,
+) -> Any:
     """Create object from description.
 
     Args:
-        obj_description (dict): Description of the object
-        global_settings (GlobalSettings): settings of the QUEENS experiment including its name
+        obj_description: Description of the object
+        global_settings: settings of the QUEENS experiment including its name
                           and the output directory
-        parameters (obj, optional): Parameters object
+        parameters: Parameters object
 
     Returns:
-        obj: Initialized object
+        Initialized object
     """
     object_class = get_module_class(obj_description, VALID_TYPES)
     if isinstance(object_class, types.FunctionType):
@@ -148,20 +156,23 @@ def from_config_create_object(obj_description, global_settings=None, parameters=
     if issubclass(object_class, (Iterator, BMFMC)):
         obj_description["global_settings"] = global_settings
     if issubclass(object_class, Scheduler):
-        obj_description["experiment_name"] = global_settings.experiment_name
+        if global_settings is not None:
+            obj_description["experiment_name"] = global_settings.experiment_name
+        else:
+            raise ValueError("Global settings object was not provided")
     return object_class(**obj_description)
 
 
-def check_for_reference(obj_description):
+def check_for_reference(obj_description: dict[str, Any]) -> bool:
     """Check if another uninitialized object is referenced.
 
     Indicated by a keyword that ends with '_name'. Sub-dictionaries are also checked.
 
     Args:
-        obj_description (dict): Description of the object
+        obj_description: Description of the object
 
     Returns:
-        bool: True, if another uninitialized object is referenced.
+        True, if another uninitialized object is referenced.
     """
     for key, value in obj_description.items():
         if (
@@ -175,16 +186,16 @@ def check_for_reference(obj_description):
     return False
 
 
-def insert_new_obj(config, new_obj_key, new_obj):
+def insert_new_obj(config: dict[str, Any], new_obj_key: str, new_obj: Any) -> dict[str, Any]:
     """Insert initialized object in other object descriptions.
 
     Args:
-        config (dict): Description of queens run, or sub dictionary
-        new_obj_key (str): Key of initialized object
-        new_obj (obj): Initialized object
+        config: Description of queens run, or sub dictionary
+        new_obj_key: Key of initialized object
+        new_obj: Initialized object
 
     Returns:
-        bool: True, if another uninitialized object is referenced.
+        True, if another uninitialized object is referenced.
     """
     referenced_keys = []
     for key, value in config.items():

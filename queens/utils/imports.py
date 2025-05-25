@@ -18,6 +18,7 @@ import importlib.util
 import logging
 import sys
 from pathlib import Path
+from typing import Any
 
 from queens.utils.path import check_if_path_exists
 from queens.utils.valid_options import get_option
@@ -29,11 +30,11 @@ def get_module_attribute(path_to_module, function_or_class_name):
     """Load function from python file by path.
 
     Args:
-        path_to_module (Path | str): "Path" to file
-        function_or_class_name (str): Name of the function
+        path_to_module: "Path" to file
+        function_or_class_name: Name of the function
 
     Returns:
-        function or class: Function or class from the module
+        Function or class from the module
     """
     # Set the module name
     module_path_obj = Path(path_to_module)
@@ -71,16 +72,18 @@ def get_module_attribute(path_to_module, function_or_class_name):
     return function
 
 
-def get_module_class(module_options, valid_types, module_type_specifier="type"):
+def get_module_class(
+    module_options: dict, valid_types: dict, module_type_specifier: str = "type"
+) -> Any:
     """Return module class defined in config file.
 
     Args:
-        module_options (dict): Module options
-        valid_types (dict): Dict of valid types with corresponding module paths and class names
-        module_type_specifier (str): Specifier for the module type
+        module_options: Module options
+        valid_types: Dict of valid types with corresponding module paths and class names
+        module_type_specifier: Specifier for the module type
 
     Returns:
-        module_class (class): Class from the module
+        Class from the module
     """
     # determine which object to create
     module_type = module_options.pop(module_type_specifier)
@@ -99,25 +102,25 @@ class LazyLoader:
     Inspired from https://stackoverflow.com/a/78312617
     """
 
-    def __init__(self, module_name):
+    def __init__(self, module_name: str):
         """Initialize the loader.
 
         Args:
-            module_name (str): name of the module to be imported
+            module_name: name of the module to be imported
         """
         self._module_name = module_name
         self._module = None
 
-    def __getattr__(self, attr):
+    def __getattr__(self, attr: str) -> Any:
         """Get attribute.
 
         Args:
-            attr (str): Attribute name
+            attr: Attribute name
 
         Returns:
-            obj: attribute
+            attribute
         """
         if self._module is None:
-            self._module = importlib.import_module(self._module_name)
+            self._module = importlib.import_module(self._module_name)  # type: ignore[assignment]
 
         return getattr(self._module, attr)

@@ -24,7 +24,7 @@ _logger = logging.getLogger(__name__)
 BASE_DATA_DIR = "queens-experiments"
 
 
-def base_directory():
+def base_directory() -> Path:
     """Holds all queens experiments.
 
     The base directory holds individual folders for each queens experiment on the compute machine.
@@ -49,47 +49,54 @@ def base_directory():
     return base_dir
 
 
-def experiment_directory(experiment_name):
+def experiment_directory(experiment_name: str) -> Path:
     """Directory for data of a specific experiment on the computing machine.
 
     Refer to base_directory() for an explanation of the directory structure.
 
     Args:
-        experiment_name (str): Experiment name
+        experiment_name: Experiment name
+
+    Returns:
+        Experiment directory
     """
     experiment_dir = base_directory() / experiment_name
     create_directory(experiment_dir)
     return experiment_dir
 
 
-def create_directory(dir_path):
-    """Create a directory either local or remote."""
+def create_directory(dir_path: str | Path) -> None:
+    """Create a directory either local or remote.
+
+    Args:
+        dir_path: Directory to create
+    """
     _logger.debug("Creating folder %s.", dir_path)
     create_folder_if_not_existent(dir_path)
 
 
-def current_job_directory(experiment_dir, job_id):
+def current_job_directory(experiment_dir: Path, job_id: int) -> Path:
     """Directory of the latest submitted job.
 
     Args:
-        experiment_dir (Path): Experiment directory
-        job_id (str): Job ID of the current job
+        experiment_dir: Experiment directory
+        job_id: Job ID of the current job
 
     Returns:
-        job_dir (Path): Path to the current job directory.
+        Path to the current job directory.
     """
     job_dir = experiment_dir / str(job_id)
     return job_dir
 
 
-def job_dirs_in_experiment_dir(experiment_dir):
+def job_dirs_in_experiment_dir(experiment_dir: Path | str):
     """Get job directories in experiment_dir.
 
     Args:
-        experiment_dir (pathlib.Path, str): Path with the job dirs
+        experiment_dir: Path with the job dirs
 
     Returns:
-        job_directories (list): List with job_dir paths
+        List with job_dir paths
     """
     experiment_dir = Path(experiment_dir)
     job_directories = []
