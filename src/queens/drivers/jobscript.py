@@ -17,7 +17,6 @@
 
 import logging
 from collections.abc import Callable
-from dataclasses import dataclass
 from pathlib import Path
 
 import numpy as np
@@ -30,48 +29,65 @@ from queens.utils.logger_settings import log_init_args
 from queens.utils.metadata import SimulationMetadata
 from queens.utils.path import create_folder_if_not_existent
 from queens.utils.run_subprocess import run_subprocess
+from typing import Protocol
 
 _logger = logging.getLogger(__name__)
 
 
-@dataclass
-class JobOptions:
-    """Dataclass for job options.
+class JobPreprocessor(Protocol):
+    files_to_copy: list
 
-    All the attributes of this dataclass can be injected into input and
-    jobscript files. The input files dictionary will be flattened, such
-    that the input files are injected by their key.
-    """
+    def prepare_input_files(
+        self, sample_dict: dict, job_data: dict, experiment_dir: Path, job_dir: Path
+    ) -> tuple[dict, Path, Path]: ...
 
-    job_dir: Path
-    output_dir: Path
-    output_file: Path
-    job_id: int
-    num_procs: int
-    experiment_dir: Path
-    experiment_name: str
-    input_files: dict
 
-    def to_dict(self):
-        """Create a job options dict.
+class Injection(JobPreprocessor):
 
-        Returns:
-            dict: Dict containing all the data.
-        """
-        dictionary = self.__dict__.copy()
-        dictionary.update(dictionary.pop("input_files"))
-        return dictionary
+    def __init__(self, input_templates: dict, files_to_copy: list = None):
+        if not isinstance(input_templates, dict):
+            input_templates = {"input_file": input_templates}
 
-    def add_data_and_to_dict(self, additional_data):
-        """Add additional options to the job options dict.
+        self.input_templates = {
+            input_template_key: Path(input_template_path)
+            for input_template_key, input_template_path in input_templates.items()
+        }
+        if files_to_copy is None:
+            files_to_copy = []
 
-        Args:
-            additional_data (dict): Additional data to combine with the job options.
+        files_to_copy.extend((str(file) for file in self.input_templates.values()))
 
-        Returns:
-            dict: Dict combining the job options and the additional data.
-        """
-        return self.to_dict() | additional_data
+    def prepare_input_files(self, sample_dict, job_data, experiment_dir, job_dir):
+
+        output_prefix = "output"
+        output_dir = job_dir / output_prefix
+
+        output_dir = create_folder_if_not_existent(output_dir)
+
+        output_file = output_dir / output_prefix
+        log_file = output_dir / (output_prefix + ".log")
+
+        # Additional data
+        job_data = job_data | {
+            "output_dir": output_dir,
+            "output_file": output_file,
+            "log_file": log_file,
+        }
+
+        # Create the paths for all input files
+        for input_template_name, input_template_path in self.input_templates.items():
+            input_file_str = input_template_name + "".join(input_template_path.suffixes)
+            job_data[input_template_name] = job_dir / input_file_str
+
+        # Inject all the data into the all the input files
+        for input_template_name, input_template_path in self.input_templates.items():
+            inject(
+                job_data | sample_dict,
+                experiment_dir / input_template_path.name,
+                job_data[input_template_name],
+            )
+
+        return job_data, output_dir, log_file
 
 
 class Jobscript(Driver):
@@ -118,12 +134,14 @@ class Jobscript(Driver):
             raise_error_on_jobscript_failure (bool, opt): Whether to raise an error for a non-zero
                                                           jobscript exit code.
         """
-        super().__init__(parameters=parameters, files_to_copy=files_to_copy)
-        self.input_templates = self.create_input_templates_dict(input_templates)
+
+        # preprocessing
+        self.job_preprocessor: JobPreprocessor = Injection(input_templates, files_to_copy)
+
+        super().__init__(parameters=parameters, files_to_copy=self.job_preprocessor.files_to_copy)
+
+        # jobscript
         self.jobscript_template = self.get_read_in_jobscript_template(jobscript_template)
-        self.files_to_copy.extend(self.input_templates.values())
-        self.data_processor = data_processor
-        self.gradient_data_processor = gradient_data_processor
 
         if extra_options is None:
             extra_options = {}
@@ -133,24 +151,9 @@ class Jobscript(Driver):
         self.jobscript_file_name = jobscript_file_name
         self.raise_error_on_jobscript_failure = raise_error_on_jobscript_failure
 
-    @staticmethod
-    def create_input_templates_dict(input_templates):
-        """Cast input templates into a dict.
-
-        Args:
-            input_templates (str, Path, dict): Input template(s).
-
-        Returns:
-            dict: Dict containing input file names and template paths.
-        """
-        if not isinstance(input_templates, dict):
-            input_templates = {"input_file": input_templates}
-
-        input_templates_dict = {
-            input_template_key: Path(input_template_path)
-            for input_template_key, input_template_path in input_templates.items()
-        }
-        return input_templates_dict
+        # post processing
+        self.data_processor = data_processor
+        self.gradient_data_processor = gradient_data_processor
 
     @staticmethod
     def get_read_in_jobscript_template(jobscript_template):
@@ -211,36 +214,33 @@ class Jobscript(Driver):
         Returns:
             Result and potentially the gradient.
         """
-        job_dir, output_dir, output_file, input_files, log_file = self._manage_paths(
-            job_id, experiment_dir
-        )
+
+        job_dir = experiment_dir / str(job_id)
+        jobscript_file = job_dir / self.jobscript_file_name
+
+        # Data for the jobs
+        job_data = {
+            "job_id": job_id,
+            "num_procs": num_procs,
+            "experiment_dir": experiment_dir,
+            "experiment_name": experiment_name,
+            "job_dir": job_dir,
+        }
 
         sample_dict = self.parameters.sample_as_dict(sample)
 
         metadata = SimulationMetadata(job_id=job_id, inputs=sample_dict, job_dir=job_dir)
 
         with metadata.time_code("prepare_input_files"):
-            job_options = JobOptions(
-                job_dir=job_dir,
-                output_dir=output_dir,
-                output_file=output_file,
-                job_id=job_id,
-                num_procs=num_procs,
-                experiment_dir=experiment_dir,
-                experiment_name=experiment_name,
-                input_files=input_files,
-            )
 
-            # Create the input files
-            self.prepare_input_files(
-                job_options.add_data_and_to_dict(sample_dict), experiment_dir, input_files
+            # Create the input files with the samples
+            job_data, output_dir, log_file = self.job_preprocessor.prepare_input_files(
+                sample_dict, job_data, experiment_dir, job_dir
             )
-
-            jobscript_file = job_dir / self.jobscript_file_name
 
             # Create jobscript
             inject_in_template(
-                job_options.add_data_and_to_dict(self.jobscript_options),
+                job_data | self.jobscript_options,
                 self.jobscript_template,
                 str(jobscript_file),
             )
@@ -254,35 +254,6 @@ class Jobscript(Driver):
             metadata.outputs = results
 
         return results
-
-    def _manage_paths(self, job_id, experiment_dir):
-        """Manage paths for driver run.
-
-        Args:
-            job_id (int): Job ID.
-            experiment_dir (Path): Path to QUEENS experiment directory.
-
-        Returns:
-            job_dir (Path): Path to job directory.
-            output_dir (Path): Path to output directory.
-            output_file (Path): Path to output file(s).
-            input_files (dict): Dict with name and path of the input file(s).
-            log_file (Path): Path to log file.
-        """
-        job_dir = experiment_dir / str(job_id)
-        output_dir = job_dir / "output"
-        output_dir = create_folder_if_not_existent(output_dir)
-
-        output_prefix = "output"
-        output_file = output_dir / output_prefix
-        log_file = output_dir / (output_prefix + ".log")
-
-        input_files = {}
-        for input_template_name, input_template_path in self.input_templates.items():
-            input_file_str = input_template_name + "".join(input_template_path.suffixes)
-            input_files[input_template_name] = job_dir / input_file_str
-
-        return job_dir, output_dir, output_file, input_files, log_file
 
     def _run_executable(self, job_id, execute_cmd):
         """Run executable.
@@ -325,18 +296,3 @@ class Jobscript(Driver):
             results["gradient"] = gradient
             _logger.debug("Got gradient: %s", gradient)
         return results
-
-    def prepare_input_files(self, sample_dict, experiment_dir, input_files):
-        """Prepare and parse data to input files.
-
-        Args:
-            sample_dict (dict): Dict containing sample.
-            experiment_dir (Path): Path to QUEENS experiment directory.
-            input_files (dict): Dict with name and path of the input file(s).
-        """
-        for input_template_name, input_template_path in self.input_templates.items():
-            inject(
-                sample_dict,
-                experiment_dir / input_template_path.name,
-                input_files[input_template_name],
-            )
